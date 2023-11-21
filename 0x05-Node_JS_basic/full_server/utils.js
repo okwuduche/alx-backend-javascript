@@ -1,26 +1,22 @@
-const { readFile } = require('fs');
+import fs from 'fs';
 
-module.exports = function readDatabase(filePath) {
-  const students = {};
-  return new Promise((resolve, reject) => {
-    readFile(filePath, (err, data) => {
+const readDatabase = (path) => {
+  const filePromise = new Promise((resolve, reject) => {
+    fs.readFile(path, (err, returnData) => {
       if (err) {
-        reject(err);
+        reject(Error('Cannot load the database'));
       } else {
-        const lines = data.toString().split('\n');
-        const noHeader = lines.slice(1);
-        for (let i = 0; i < noHeader.length; i += 1) {
-          if (noHeader[i]) {
-            const field = noHeader[i].toString().split(',');
-            if (Object.prototype.hasOwnProperty.call(students, field[3])) {
-              students[field[3]].push(field[0]);
-            } else {
-              students[field[3]] = [field[0]];
-            }
-          }
-        }
-        resolve(students);
+        const data = returnData.toString().split('\n');
+
+        const allStudents = data.filter((v, i) => i !== 0 && v.length !== 0);
+
+        const csStudents = allStudents.filter((v) => v.toString().endsWith('CS')).map((v) => v.split(',')[0]);
+        const sweStudents = allStudents.filter((v) => v.toString().endsWith('SWE')).map((v) => v.split(',')[0]);
+        resolve({ CS: csStudents, SWE: sweStudents });
       }
     });
   });
+  return filePromise;
 };
+
+export default readDatabase;
